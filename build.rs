@@ -1,7 +1,17 @@
 use std::env;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 fn main() {
+    let mut files = Vec::new();
+    recursion(&mut files, "cpp/interface").unwrap();
+    recursion(&mut files, "cpp/src").unwrap();
+    println!("cargo:rustc-link-lib=static=silk");
+    println!("cargo:rerun-if-changed=cpp/wrapper.h");
+    cc::Build::new()
+        .includes(["cpp/src", "cpp/interface"])
+        .files(files)
+        .compile("silk");
+
     let bindings = bindgen::Builder::default()
         .header("cpp/wrapper.h")
         .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
@@ -12,4 +22,21 @@ fn main() {
     bindings
         .write_to_file(out_path.join("bindings.rs"))
         .expect("Failed to write bindings");
+}
+
+fn recursion<P: AsRef<Path>>(v: &mut Vec<String>, dir: P) -> std::io::Result<()> {
+    let rd = std::fs::read_dir(dir)?;
+    for x in rd {
+        let de = x?;
+        let path = de.path();
+        if path.is_dir() {
+            recursion(v, path)?;
+        } else {
+            let path = path.into_os_string().into_string().unwrap();
+            if path.ends_with(".c") {
+                v.push(path);
+            }
+        }
+    }
+    Ok(())
 }
