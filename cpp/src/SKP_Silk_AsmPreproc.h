@@ -166,21 +166,46 @@ END_MACRO
 
 
 MACRO SKP_SMLAD	ARG0_in, ARG1_in, ARG2_in, ARG3_in
+#if EMBEDDED_ARM>=6
 	smlad	ARG0, ARG1, ARG2, ARG3
+#elif EMBEDDED_ARM>=5
+	smlabb	ARG0, ARG1, ARG2, ARG3
+	smlatt	ARG0, ARG1, ARG2, ARG0
+#else
+	.abort "SKP_SMUAD can't be used for armv4 or lower device.."
+#endif
 END_MACRO
 
 MACRO SKP_SMUAD	ARG0_in, ARG1_in, ARG2_in
+#if EMBEDDED_ARM>=6
 	smuad	ARG0, ARG1, ARG2
+#elif EMBEDDED_ARM>=5
+	smulbb	ARG0, ARG1, ARG2
+	smlatt	ARG0, ARG1, ARG2, ARG0
+#else
+	.abort "SKP_SMUAD can't be used for armv4 or lower device.."
+#endif
 END_MACRO
 
 MACRO SKP_SMLALD	ARG0_in, ARG1_in, ARG2_in, ARG3_in
+#if EMBEDDED_ARM>=6
 	smlald	ARG0, ARG1, ARG2, ARG3
+#elif EMBEDDED_ARM>=5
+	smlalbb	ARG0, ARG1, ARG2, ARG3
+	smlaltt	ARG0, ARG1, ARG2, ARG3
+#else
+	.abort "SKP_SMLALD can't be used for armv4 or lower device.."
+#endif
 END_MACRO
 
 MACRO SKP_RSHIFT_ROUND ARG0_in, ARG1_in, ARG2_in
+#if EMBEDDED_ARM>=4
 	mov		ARG0, ARG1, asr #(ARG2-1)
 	add		ARG0, ARG0, #1
 	mov		ARG0, ARG0, asr #1
+#else
+	.abort "SKP_RSHIFT_ROUND can't be used for armv3 or lower device.."
+#endif
 END_MACRO
 
 MACRO ADD_SHIFT ARG0_in, ARG1_in, ARG2_in, ARG3_in, ARG4_in
